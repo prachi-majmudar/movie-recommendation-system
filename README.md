@@ -11,10 +11,10 @@ It uses Natural Language Processing (NLP) techniques to convert text description
 ✅ Cloud-hosted and accessible anywhere
 
 # 🛠 Tech Stack
-Python
-pandas
-scikit-learn
-Streamlit
+Python,
+pandas,
+scikit-learn,
+Streamlit,
 Git & GitHub
 
 # 📈 Features
