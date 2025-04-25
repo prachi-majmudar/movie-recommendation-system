@@ -2,7 +2,7 @@
 A content-based movie recommendation engine built using Python, pandas, scikit-learn, and deployed live on Streamlit Cloud.
 The app suggests movies based on plot similarities using TF-IDF vectorization and cosine similarity.
 
-📚 Overview
+# 📚 Overview
 This application analyzes movie plot overviews and suggests similar movies to users.
 It uses Natural Language Processing (NLP) techniques to convert text descriptions into numerical vectors, and computes similarity between movies.
 
