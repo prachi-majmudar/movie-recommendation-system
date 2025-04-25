@@ -27,6 +27,21 @@ def fetch_poster(movie_name):
             return full_path
     return "https://via.placeholder.com/300x450?text=No+Image"
 
+# ✅ Fetch Overview Function (needed for TMDb fetch)
+def fetch_movie_overview_from_tmdb(movie_name):
+    base_url = 'https://api.themoviedb.org/3/search/movie'
+    params = {
+        'api_key': TMDB_API_KEY,
+        'query': movie_name
+    }
+    response = requests.get(base_url, params=params)
+    data = response.json()
+    
+    if data.get('results'):
+        return data['results'][0]['overview']
+    else:
+        return None
+
 # ✅ Load Dataset
 movies = pd.read_csv('data/movies.csv')
 
@@ -89,19 +104,4 @@ if st.button('Recommend'):
 
 # Footer
 st.markdown("---")
-st.caption("This area is under construction")
-
-# Fetch overview function (still needed)
-def fetch_movie_overview_from_tmdb(movie_name):
-    base_url = 'https://api.themoviedb.org/3/search/movie'
-    params = {
-        'api_key': TMDB_API_KEY,
-        'query': movie_name
-    }
-    response = requests.get(base_url, params=params)
-    data = response.json()
-    
-    if data.get('results'):
-        return data['results'][0]['overview']
-    else:
-        return None
+st.caption("⚠️Area Under Construction")
