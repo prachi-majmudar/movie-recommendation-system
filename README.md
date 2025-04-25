@@ -10,18 +10,19 @@ It uses Natural Language Processing (NLP) techniques to convert text description
 ✅ Fast recommendations
 ✅ Cloud-hosted and accessible anywhere
 
-🛠 Tech Stack
+# 🛠 Tech Stack
 Python
 pandas
 scikit-learn
 Streamlit
 Git & GitHub
 
-📈 Features
+# 📈 Features
 Content-Based Recommendation: Suggests movies by analyzing textual descriptions.
 TF-IDF Vectorization: Converts text to numerical vectors to capture importance.
 Cosine Similarity: Measures similarity between movies based on their overview vectors.
 Streamlit App: Deployed with a clean, simple web interface.
 Cloud Hosted: Publicly accessible via Streamlit Community Cloud.
 
+# link
 https://movie-recommendation-system-iungy5cn9hg4qjgp7dzpuk.streamlit.app/ 
