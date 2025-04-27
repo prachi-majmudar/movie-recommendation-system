@@ -6,11 +6,12 @@ import numpy as np
 import requests
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from rapidfuzz import process  # ✅ Typo Handling
 
 # ✅ Your TMDb API Key
 TMDB_API_KEY = '64d21f7ceb56fe43fca0f4041c9e8ae5'
 
-# ✅ Function to fetch movie poster from TMDb
+# ✅ Fetch poster from TMDb
 def fetch_poster(movie_name):
     base_url = 'https://api.themoviedb.org/3/search/movie'
     params = {
@@ -27,7 +28,7 @@ def fetch_poster(movie_name):
             return full_path
     return "https://via.placeholder.com/300x450?text=No+Image"
 
-# ✅ Fetch Overview Function (needed for TMDb fetch)
+# ✅ Fetch overview if movie not found locally
 def fetch_movie_overview_from_tmdb(movie_name):
     base_url = 'https://api.themoviedb.org/3/search/movie'
     params = {
@@ -54,54 +55,65 @@ tfidf_matrix = tfidf.fit_transform(movies['overview'])
 cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 indices = pd.Series(movies.index, index=movies['title']).drop_duplicates()
 
-# ✅ Recommendation Function
-def recommend(title):
+# ✅ Recommendation function with Typo Handling + Genre Filter
+def recommend(title, selected_genre=None):
     title = title.title().strip()
     
-    if title not in indices:
-        st.warning("Movie not found in local database! Fetching from TMDb...")
-        overview = fetch_movie_overview_from_tmdb(title)
-        
-        if overview is None:
-            return [], []
-        
-        overview_vector = tfidf.transform([overview])
-        similarity_scores = cosine_similarity(overview_vector, tfidf_matrix)
-        similarity_scores = similarity_scores.flatten()
-        sim_indices = similarity_scores.argsort()[-10:][::-1]
-        recommended_movies = movies['title'].iloc[sim_indices].tolist()
-    else:
-        idx = indices[title]
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[1:11]
-        movie_indices = [i[0] for i in sim_scores]
-        recommended_movies = movies['title'].iloc[movie_indices].tolist()
+    # Typo Handling
+    movie_titles = movies['title'].tolist()
+    best_match = process.extractOne(title, movie_titles, score_cutoff=70)
     
-    # Fetch posters for recommended movies
+    if best_match:
+        title = best_match[0]
+    else:
+        st.error("❌ Could not find any movie matching your input. Please try again.")
+        return [], []
+    
+    idx = indices[title]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:30]  # Take top 30 to apply genre filter
+    
+    movie_indices = [i[0] for i in sim_scores]
+    recommended_movies = movies.iloc[movie_indices]
+    
+    # Genre Filtering
+    if selected_genre:
+        recommended_movies = recommended_movies[recommended_movies['genres'].str.contains(selected_genre, case=False, na=False)]
+    
+    recommended_movies = recommended_movies.head(10)
+
     posters = []
-    for movie in recommended_movies:
+    for movie in recommended_movies['title']:
         posters.append(fetch_poster(movie))
     
-    return recommended_movies, posters
+    return recommended_movies['title'].tolist(), posters
 
 # ✅ Streamlit Frontend
 st.set_page_config(page_title="Movie Recommendation System 🎬", page_icon="🎥")
 st.title('🎬 Movie Recommendation System')
 
+# Genre Filter Dropdown
+genre_options = ['Action', 'Comedy', 'Drama', 'Thriller', 'Animation', 'Romance', 'Adventure', 'Science Fiction', 'Fantasy', 'Crime', 'Mystery', 'Family']
+selected_genre = st.selectbox('Select Genre (Optional)', options=["Any"] + genre_options)
+
+# Movie Title Input
 movie_title = st.text_input('Enter a Movie Title')
 
 if st.button('Recommend'):
     if movie_title:
-        recommended_movies, posters = recommend(movie_title)
-        st.subheader('Recommended Movies:')
-        for title, poster in zip(recommended_movies, posters):
-            st.image(poster, width=200)
-            st.write(f"**{title}**")
-            st.markdown("---")
+        genre_filter = selected_genre if selected_genre != "Any" else None
+        recommended_movies, posters = recommend(movie_title, genre_filter)
+        
+        if recommended_movies:
+            st.subheader('Recommended Movies:')
+            for title, poster in zip(recommended_movies, posters):
+                st.image(poster, width=200)
+                st.write(f"**{title}**")
+                st.markdown("---")
     else:
         st.warning('⚠️ Please enter a movie title to get recommendations.')
 
 # Footer
 st.markdown("---")
-st.caption("⚠️Area Under Construction")
+st.caption("Area Under Construction")
